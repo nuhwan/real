@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>302 출석</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>302 출석</h1>
+        <form id="attendance-form">
+            <label for="student_id"></label>
+            <input type="text" id="student_id" name="student_id" placeholder="학번을 입력하세요." readonly>
+            <div class="numpad">
+                <button type="button" class="num-btn" data-num="0">0</button>
+                <button type="button" class="num-btn" data-num="1">1</button>
+                <button type="button" class="num-btn" data-num="2">2</button>
+                <button type="button" class="num-btn" data-num="3">3</button>
+                <button type="button" class="num-btn" data-num="4">4</button>
+                <button type="button" class="num-btn" data-num="5">5</button>
+                <button type="button" class="num-btn" data-num="6">6</button>
+                <button type="button" class="num-btn" data-num="7">7</button>
+                <button type="button" class="num-btn" data-num="8">8</button>
+                <button type="button" class="num-btn" data-num="9">9</button>
+                <button type="button" class="num-btn" data-num="clear">지움</button>
+                <button type="button" class="num-btn" data-num="enter">입력</button>
+            </div>
+        </form>
+        <p id="response"></p>
+        <audio id="dingdong-sound" src="{{ url_for('static', filename='dingdong.mp3') }}"></audio>
+    </div>
+
+    <script>
+        document.querySelectorAll('.num-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const num = this.getAttribute('data-num');
+                const studentIdInput = document.getElementById('student_id');
+                
+                if (num === 'clear') {
+                    studentIdInput.value = '';
+                } else if (num === 'enter') {
+                    // Enter 버튼 클릭 시 폼 제출
+                    submitForm();
+                } else {
+                    studentIdInput.value += num;
+                }
+            });
+        });
+
+        function submitForm() {
+            const studentId = document.getElementById('student_id').value;
+
+            fetch('/attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ student_id: studentId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = `출석 완료 : ${data.student_id} - ${data.timestamp}`;
+                document.getElementById('student_id').value = '';
+                document.getElementById('dingdong-sound').play();
+            })
+            .catch(error => {
+                document.getElementById('response').innerText = `Error: ${error}`;
+                console.error('Error:', error);
+            });
+        }
+
+        document.getElementById('attendance-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm();
+        });
+    </script>
+</body>
+</html>
